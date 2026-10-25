@@ -165,6 +165,7 @@
             <th data-field="corrections" class="n sec"><button type="button">糾正</button></th>
             <th data-field="flag"><button type="button">標記</button></th>
             <th data-field="verdict" class="j"><button type="button">判讀</button></th>
+            <th data-field="votes" class="j sec"><button type="button">票數</button></th>
             <th data-field="reason" class="j"><button type="button">原因</button></th>
             <th data-field="fix" class="j sec"><button type="button">下次怎麼做</button></th>
           </tr></thead>
@@ -182,7 +183,7 @@
       <li><b>資料範圍。</b>從 <span data-source="meta" data-row="0" data-field="start_day">—</span> 起，涵蓋 <span data-source="meta" data-row="0" data-field="chains">—</span> 條 chain、<span data-source="meta" data-row="0" data-field="calls">—</span> 次 API 呼叫；三台的 transcript 保留天數已改成 365 天。claude.ai 網頁對話與雲端 session 不在內。</li>
       <li><b>tokens 怎麼分給每筆內容。</b>兩次呼叫之間 context 增加的 tokens（扣掉上一次的 output），依字元數比例分給這段時間插入的 tool 結果、使用者訊息與 attachment。</li>
       <li><b>cache 重建的判定。</b>一次呼叫的 cache write 至少 20,000 tokens 且超過該次 context 的一半；金額是重寫的 tokens 乘上（寫入單價 − 讀取單價）。</li>
-      <li><b>判讀。</b>被標記的 session 中花費最高的 15 個，交給 Claude Opus 5.5 讀摘要後判斷值不值得；它只看到節錄，不是整段對話。</li>
+      <li><b>判讀。</b>花費 $1 以上的 session 都交給 Claude Opus 5.5 讀摘要，判斷值不值得；它只看到節錄，不是整段對話。單次判讀在兩種結果的邊界上會跳，所以每個 session 判 3 次，每次打亂順序重新分批，取中位數。「票數」是跟最終判讀相同的票數，1/3 表示三種判讀各一票，取「部分值得」。標記是規則粗篩的結果，只給判讀當參考。</li>
     </ul>
   </section>
 </div>
@@ -299,7 +300,7 @@
       {f: 'calls', num: 1, cls: 'sec', fmt: num}, {f: 'edits', num: 1, fmt: num}, {f: 'corrections', num: 1, cls: 'sec', fmt: num},
       {f: 'flag', pill: () => 'bad'},
       {f: 'verdict', cls: 'j', pill: v => (v === '值得' ? 'ok' : v === '部分值得' ? 'warn' : 'bad')},
-      {f: 'reason', cls: 'j wide'}, {f: 'fix', cls: 'j sec wide'}]},
+      {f: 'votes', cls: 'j sec'}, {f: 'reason', cls: 'j wide'}, {f: 'fix', cls: 'j sec wide'}]},
     't-waste': {source: 'waste', q: 'q-waste', cnt: 'cnt-waste', sort: 'cost', cols: [
       {f: 'rank', num: 1}, {f: 'kind'}, {f: 'tool', cls: 'sec'}, {f: 'detail', cls: 'wide mono'}, {f: 'project', cls: 'sec'},
       {f: 'where', cls: 'sec'}, {f: 'tokens', num: 1, fmt: compact}, {f: 'carried', num: 1, cls: 'sec', fmt: num},

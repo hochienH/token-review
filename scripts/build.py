@@ -8,7 +8,7 @@ sessions, and write the dashboard datasets:
 
 Writes OUT_DIR/{sessions,waste,waste_kinds,meta}.json (dashboard),
 OUT_DIR/daily.json (for crosscheck.py against ccusage), OUT_DIR/judge_input.json
-(digests of flagged sessions, local only) and prints a cost check against
+(digests of sessions costing JUDGE_MIN or more, local only) and prints a cost check against
 Claude Code's own cost-state records. Cost totals and fixed overhead are left
 to ccusage and Claude Code's /context.
 """
@@ -32,6 +32,7 @@ for p in PRICES.values():
 SOURCE = {'claude-vscode': 'IDE', 'cli': 'Terminal', 'claude-desktop': 'Desktop', 'sdk-py': 'Agent SDK',
           'sdk-ts': 'Agent SDK', 'sdk-cli': 'claude -p'}
 KIND = {'big': '大型 tool 輸出', 'reread': '重複讀同一檔', 'retry': '失敗後原樣重試', 'rebuild': 'cache 重建'}
+JUDGE_MIN = 1.0     # every session at or above this many USD goes to judge.py; flags are only context for it
 unknown_models = collections.Counter()
 
 
@@ -120,7 +121,7 @@ def main():
             'cost': round(total, 4), 'sub_cost': round(sub_cost, 4), 'waste_cost': round(waste, 4),
             'edits': oc['edits'], 'commits': oc['commits'], 'artifacts': oc['artifacts'],
             'interrupts': neg['interrupts'], 'corrections': neg['corrections'], 'errors': neg['errors'],
-            'flag': '', 'verdict': '', 'reason': '', 'fix': '',
+            'flag': '', 'verdict': '', 'votes': '', 'reason': '', 'fix': '',
         }
         flags = []
         produced = oc['edits'] + oc['commits'] + oc['artifacts']
@@ -132,7 +133,7 @@ def main():
             flags.append('浪費比例高')
         row['flag'] = '、'.join(flags)
         sessions.append(row)
-        if flags:
+        if total >= JUDGE_MIN:
             top = sorted((it for x in allc for it in x['items']), key=lambda it: -it['cost'])[:4]
             tc = collections.Counter()
             for x in allc:
@@ -186,6 +187,8 @@ def main():
             v = verdicts.get(r['session'])
             if v:
                 r['verdict'], r['reason'], r['fix'] = v.get('verdict', ''), v.get('reason', ''), v.get('fix', '')
+                if v.get('votes'):      # judge.json from before 2026-10-25 has a single verdict, no votes
+                    r['votes'] = '%d/%d' % (v['votes'].count(r['verdict']), len(v['votes']))
 
     days_seen = sorted({r['day'] for r in daily_rows})
     meta = [{
@@ -206,11 +209,11 @@ def main():
     os.makedirs(out_dir, exist_ok=True)
     for name, rows in [('sessions', sessions), ('daily', daily_rows), ('waste', items[:400]),
                        ('waste_kinds', kind_rows), ('meta', meta),
-                       ('judge_input', [x for _, x in judge_pool[:15]])]:
+                       ('judge_input', [x for _, x in judge_pool])]:
         json.dump(rows, open(os.path.join(out_dir, name + '.json'), 'w'), ensure_ascii=False, indent=0)
-    print('sessions=%d chains=%d waste_items=%d flagged=%d total=$%.2f waste=$%.2f' % (
-        len(sessions), len(chains), len(items), len(judge_pool), sum(r['cost'] for r in sessions),
-        sum(r['cost'] for r in items)))
+    print('sessions=%d chains=%d waste_items=%d flagged=%d to_judge=%d total=$%.2f waste=$%.2f' % (
+        len(sessions), len(chains), len(items), sum(bool(r['flag']) for r in sessions), len(judge_pool),
+        sum(r['cost'] for r in sessions), sum(r['cost'] for r in items)))
     if unknown_models:
         print('unpriced models:', dict(unknown_models))
 

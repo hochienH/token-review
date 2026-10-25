@@ -12,7 +12,8 @@
 - 2026-10-24 縮減成核心（照現成方案調查）：拿掉固定開銷估算（改用 `/context`）與「花在哪」的總表、每日、token 種類、專案圖（改用 ccusage）。保留累積成本、cache 重建、重複讀檔、失敗重試、session 判讀、兩種對帳。
 - cache 重建原因優先讀 `message.diagnostics.cache_miss_reason.type`，沒有才用間隔／model 推測並標「推測」。
 - 跟 ccusage 20.0.42 交叉核對（crosscheck.py，只有 Air 有 node）。
-- judge 用 anthropic SDK 直接打 Messages API（`scripts/judge.py`，venv 在 ~/.cache/token-review/venv），Opus 5.5、effort high、server-side fallback；一次呼叫判 15 個 session。
+- judge 用 anthropic SDK 直接打 Messages API（`scripts/judge.py`，venv 在 ~/.cache/token-review/venv），Opus 5.5、effort high、server-side fallback；15 個 session 一批。
+- 2026-10-25：送 judge 的條件從「被規則標記的前 15 個」改成「花費 ≥ $1 的全部 session」，每個判 3 次，每輪打亂順序重新分批（同一個 session 不會每次都跟同一批鄰居一起判），取中位數：3 票時等於多數票，三種各一票時取「部分值得」。規則標記改成只給 judge 參考。原因：沒被標記的 session 佔 14% 花費卻從沒判過，而且 judge 在邊界上會跳。judge_prompt.md 沒改，才能跟修正前後各跑 5 次的結果比。
 
 ## 現成方案（2026-10-24 調查，star 數是當天 GitHub API）
 - 成本按日／session／model：ccusage（19.1k，MIT，1h/5m 分開計價）、CodeBurn（11.6k，MIT，有 web UI，自承 subagent 可能漏算）。這塊不值得自己維護，拿 ccusage 交叉核對。
@@ -29,3 +30,4 @@
 - transcript 預設只留 30 天；第一次 run 最早只到 2026-09-20。
 - 2026-10-25：corrections 與 interrupts 原本連 subagent 的 user 訊息一起算，但那是主線寫給 subagent 的 prompt，不是使用者打的字。602 次「糾正」裡 582 次來自 subagent，judge 的 reason 還引用了灌水數字。改成只算主線，errors、retries 照舊算全部。corrections 只是 regex 命中數，不等於人工確認的糾正。
 - 2026-10-25：judge 單次結果不能當定論，而且對 corrections 很敏感。同一份輸入修正前後各跑 5 次：15 個 session 有 11 個 10 次都一樣；最貴的 session 修正前 5 次全判「不值得」，修正後 5 次全判「部分值得」；落在兩種 verdict 邊界的 session 會隨機跳動。要引用 judge 結論就多跑幾次看多數票。
+- 2026-10-25：judge 的 verdict 會受同一批其他 session 影響，不是絕對分數。340ffcf9 在「15 個被標記的 session 一批」時 10 次都判「值得」，改成跟沒被標記的 session 混在一起分批後，3 次都判「部分值得」。打亂分批只能平均掉批次組合的隨機差異，平均不掉「整體母體變了」造成的偏移。要更穩就一次只判一個 session（每次都重送 system prompt，花費會高一些，多少還沒估），還沒試。

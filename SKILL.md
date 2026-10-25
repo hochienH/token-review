@@ -21,7 +21,7 @@ description: 找出 Claude Code 的 token 浪費：從三台機器（MacBook Air
 3b. **跟 ccusage 交叉核對**（只有 Air 有 node）：
    `npx -y ccusage@20.0.42 daily --json --since 20260920 --timezone Asia/Tokyo > $R/ccusage_air.json && python3 -I ~/.claude/skills/token-review/scripts/crosscheck.py $R/out air $R/ccusage_air.json`
    - 比值應接近 1.000（第一次 1.0001／1.000）；偏離超過 1% 就先查哪一天差最多（`worst_day`），再往下。
-4. **LLM 判讀（直接打 Messages API，扣 promotional credit；第一次 run 約 US$0.16）**：
+4. **LLM 判讀（直接打 Messages API，扣 promotional credit）**：花費 ≥ $1 的 session 各判 3 次取中位數；2026-10-25 判 102 個 session、21 次呼叫，US$2.61。
    `~/.cache/token-review/venv/bin/python ~/.claude/skills/token-review/scripts/judge.py $R/out`
    - 寫出 `$R/out/judge.json` 與 `judge_usage.json`，再跑一次步驟 3，判讀與 ccusage 核對結果就會併進 sessions 與 meta。
    - **不要用 `claude -p`**：promotional credit 不涵蓋 Claude Code 用量，帶 key 也會回 `Credit balance is too low`。
