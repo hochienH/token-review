@@ -27,3 +27,4 @@
 - 2026-10-23：`claude -p --bare` 帶 key 回 `Credit balance is too low`。原因不是沒 credit：promotional credit 只涵蓋 Agent SDK、API、Batch API、Playground、Managed Agents，不含 Claude Code。同一把 key 用 curl 打 API 成功。
 - Opus 5.5 的 cache read 是 input 的 1/20（$0.20 vs $4），Fable 5.1 是 1/40；不是常見的 1/10。
 - transcript 預設只留 30 天；第一次 run 最早只到 2026-09-20。
+- 2026-10-25：corrections 與 interrupts 原本連 subagent 的 user 訊息一起算，但那是主線寫給 subagent 的 prompt，不是使用者打的字。602 次「糾正」裡 582 次來自 subagent，judge 的 reason 還引用了灌水數字。改成只算主線，errors、retries 照舊算全部。corrections 只是 regex 命中數，不等於人工確認的糾正。

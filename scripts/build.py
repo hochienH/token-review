@@ -108,7 +108,8 @@ def main():
         neg = collections.Counter()
         for x in allc:
             oc.update(x['outcome'])
-            neg.update(x['neg'])
+            # a subagent's user messages are the prompts the main chain wrote, not typed by the user
+            neg.update({k: v for k, v in x['neg'].items() if x is c or k not in ('corrections', 'interrupts')})
         total = c['cost'] + sub_cost
         src = SOURCE.get(c['entrypoint'], c['entrypoint'] or '?')
         row = {
