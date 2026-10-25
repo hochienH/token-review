@@ -1,0 +1,393 @@
+<style>
+.tr { display: flex; flex-direction: column; gap: var(--cds-gap-xl); font-family: var(--font-anthropic-sans); max-width: 76rem; margin-inline: auto; }
+.tr-head h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; text-wrap: balance; }
+.tr-take { font-size: var(--cds-font-size-body); color: var(--color-fg-muted); max-width: 72ch; margin: var(--cds-gap-sm) 0 0; line-height: 1.6; }
+.tr-take b { color: var(--color-fg); }
+.tr-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: var(--cds-gap-md); }
+.tr-tile, .tr-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); min-width: 0; }
+.tr-tile { display: flex; flex-direction: column; gap: var(--cds-gap-xs); }
+.tr-tile .lbl, .tr-tile .sub { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.tr-tile .num { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; }
+.tr-sec { display: flex; flex-direction: column; gap: var(--cds-gap-md); }
+.tr-sec > h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+.tr-sec > p { margin: 0; color: var(--color-fg-muted); font-size: var(--cds-font-size-body); max-width: 72ch; }
+.tr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: var(--cds-gap-md); }
+.tr-card h3 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+.tr-card .note { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: var(--cds-gap-xs) 0 var(--cds-gap-md); max-width: 70ch; }
+.tr-chart { position: relative; min-height: 220px; }
+.tr-svg { display: block; overflow: visible; }
+.tr-svg text { font-family: var(--font-anthropic-sans); font-size: var(--cds-font-size-caption); fill: var(--color-fg); }
+.tr-svg text.val { fill: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+.tr-tip { position: absolute; z-index: 2; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); min-width: 9rem; max-width: 18rem; }
+.tr-tip-h { color: var(--cds-text-secondary); margin-bottom: 2px; }
+.tr-tip-r { display: flex; align-items: center; gap: var(--cds-gap-xs); font-variant-numeric: tabular-nums; }
+.tr-tip-r b { margin-left: auto; padding-left: var(--cds-gap-sm); font-weight: 500; }
+.tr-fail { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: var(--cds-gap-xs); color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.tr-fail i { width: 0.375rem; height: 0.375rem; border-radius: 50%; background: var(--color-bad); }
+.tr-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cds-gap-sm); margin-bottom: var(--cds-gap-sm); }
+.tr-tools input { font: inherit; font-size: var(--cds-font-size-caption); color: var(--color-fg); background: var(--color-bg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-sm); min-width: 0; width: 16rem; max-width: 100%; }
+.tr-tools .cnt { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.tr-tablebox { max-height: 30rem; overflow: auto; }
+.tr-t { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+.tr-t th { position: sticky; top: 0; z-index: 1; background: var(--color-panel); text-align: left; font-weight: var(--cds-font-weight-medium); color: var(--color-fg-muted); padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); white-space: nowrap; }
+.tr-t th button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.tr-t th button:focus-visible, .tr-tools input:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
+.tr-t th[aria-sort=descending] button::after { content: " ↓"; }
+.tr-t th[aria-sort=ascending] button::after { content: " ↑"; }
+.tr-t td { padding: var(--cds-pad-xs) var(--cds-pad-sm); border-top: 1px solid var(--color-border-line); vertical-align: top; }
+.tr-t .n { text-align: right; white-space: nowrap; }
+.tr-t .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.tr-t td.wide { min-width: 14rem; overflow-wrap: anywhere; }
+.tr-t.hide-judge .j { display: none; }
+.tr-pill { display: inline-block; margin: 0 4px 2px 0; padding: 0 6px; border-radius: 999px; border: 1px solid var(--color-border-line); white-space: nowrap; }
+.tr-pill.bad { color: var(--color-bad); }
+.tr-pill.warn { color: var(--color-warn); }
+.tr-pill.ok { color: var(--color-ok); }
+.tr-pending { font-size: var(--cds-font-size-caption); color: var(--color-warn); }
+.tr-defs { margin: 0; display: grid; gap: var(--cds-gap-sm); font-size: var(--cds-font-size-body); }
+.tr-defs dt { font-weight: var(--cds-font-weight-medium); }
+.tr-defs dd { margin: 0 0 var(--cds-gap-xs); color: var(--color-fg-muted); max-width: 72ch; }
+.tr-method { margin: 0; padding-left: 1.2em; display: grid; gap: var(--cds-gap-sm); font-size: var(--cds-font-size-body); color: var(--color-fg-muted); max-width: 76ch; line-height: 1.6; }
+.tr-method b { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+.tr-method code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92em; }
+[data-dash-source-state=empty] { color: transparent; }
+[data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+@media (max-width: 640px) { .tr-t .sec { display: none; } }
+</style>
+
+<div class="tr">
+  <header class="tr-head">
+    <h1 id="top">Token Review</h1>
+    <p class="tr-take" id="takeaway">
+      <span data-source="meta" data-row="0" data-field="start_day" class="dash-skeleton">—</span> 到
+      <span data-source="meta" data-row="0" data-field="end_day" class="dash-skeleton">—</span>，三台機器的 Claude Code 共花
+      <b data-source="totals" data-field="cost" class="dash-skeleton">—</b>（API 等價），其中
+      <b data-source="totals" data-field="waste" class="dash-skeleton">—</b>（<span data-source="totals" data-field="share" class="dash-skeleton">—</span>）是可疑浪費。最大一塊是
+      <span data-source="waste_kinds" data-row="0" data-field="kind" class="dash-skeleton">—</span><span id="take-detail-wrap">（<span data-source="waste_kinds" data-row="0" data-field="detail" class="dash-skeleton">—</span>）</span>的
+      <b data-source="waste_kinds" data-row="0" data-field="cost" class="dash-skeleton">—</b><span id="take-why"></span>
+    </p>
+  </header>
+
+  <section class="tr-tiles" aria-label="總覽">
+    <div class="tr-tile">
+      <div class="lbl">總花費（API 等價）</div>
+      <div class="num dash-skeleton" data-source="totals" data-field="cost">—</div>
+      <div class="sub"><span data-source="meta" data-row="0" data-field="days">—</span> 天、<span data-source="totals" data-field="sessions">—</span> 個 session</div>
+    </div>
+    <div class="tr-tile">
+      <div class="lbl">可疑浪費（上限）</div>
+      <div class="num dash-skeleton" data-source="totals" data-field="waste">—</div>
+      <div class="sub">佔總花費 <span data-source="totals" data-field="share">—</span></div>
+    </div>
+    <div class="tr-tile">
+      <div class="lbl">cache 重建</div>
+      <div class="num dash-skeleton" data-source="totals" data-field="rebuild">—</div>
+      <div class="sub"><span data-source="totals" data-field="rebuild_n">—</span> 次，context 整段重寫進 cache</div>
+    </div>
+    <div class="tr-tile">
+      <div class="lbl">大型 tool 輸出的累積成本</div>
+      <div class="num dash-skeleton" data-source="totals" data-field="big">—</div>
+      <div class="sub"><span data-source="totals" data-field="big_n">—</span> 筆，之後每次呼叫都再付一次</div>
+    </div>
+  </section>
+
+  <section class="tr-sec" id="waste">
+    <h2>哪裡被浪費</h2>
+    <p>以下金額都是「如果沒發生就能省下」的上限，不是每一筆都省得掉：有些大檔本來就得讀。</p>
+    <div class="tr-grid">
+      <div class="tr-card">
+        <h3 id="kinds-title">可疑浪費的種類</h3>
+        <p class="note">cache 重建的原因取自 Claude Code 記錄的 cache_miss_reason；舊 transcript 沒有這個欄位，原因從間隔與 model 推測，標「推測」。</p>
+        <div class="tr-chart dash-skeleton" id="ch-kinds" data-source="waste_kinds"></div>
+      </div>
+      <div class="tr-card">
+        <h3>每一種怎麼算、怎麼避免</h3>
+        <dl class="tr-defs">
+          <dt>cache 重建</dt>
+          <dd>上一則的 cache 已經找不到（多半是閒置超過 TTL，Claude Code 用 1 小時），或 model、system prompt 變了，整段 context 要重新寫入 cache，以寫入價計。避免：離開前把進度寫成 handoff 檔，回來開新 session 讀檔接手；session 中途不換 model。</dd>
+          <dt>大型 tool 輸出</dt>
+          <dd>單次 tool 結果至少 5,000 tokens。它之後每個呼叫都會以 cache read 再付一次，所以算的是「大小 × 之後被帶著的呼叫數」。避免：用 offset/limit、grep、head 讀需要的段落，或把大量閱讀交給 subagent，只收摘要。</dd>
+          <dt>重複讀同一檔</dt>
+          <dd>同一檔同一段再讀一次，中間沒有改過它。</dd>
+          <dt>失敗後原樣重試</dt>
+          <dd>tool 回報錯誤後，下一個呼叫用一模一樣的參數再跑一次。</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="tr-card">
+      <h3 id="items-title">最貴的 400 筆</h3>
+      <p class="note">「之後被帶著」是這筆內容進入 context 後，同一段 context 裡還有幾次呼叫。</p>
+      <div class="tr-tools">
+        <input type="search" id="q-waste" placeholder="搜尋內容、專案、tool" aria-label="搜尋可疑浪費">
+        <span class="cnt" id="cnt-waste"></span>
+      </div>
+      <div class="tr-tablebox">
+        <table class="tr-t" id="t-waste" data-source="waste" data-row-key="rank">
+          <thead><tr>
+            <th data-field="rank" class="n"><button type="button">#</button></th>
+            <th data-field="kind"><button type="button">種類</button></th>
+            <th data-field="tool" class="sec"><button type="button">tool／原因</button></th>
+            <th data-field="detail"><button type="button">內容</button></th>
+            <th data-field="project" class="sec"><button type="button">專案</button></th>
+            <th data-field="where" class="sec"><button type="button">位置</button></th>
+            <th data-field="tokens" class="n"><button type="button">tokens</button></th>
+            <th data-field="carried" class="n sec"><button type="button">之後被帶著</button></th>
+            <th data-field="cost" class="n"><button type="button">花費</button></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="tr-sec" id="sessions">
+    <h2>哪些 session 最不值得</h2>
+    <p>標記是規則算的：花費至少 $1 卻沒有任何 edit、commit 或 artifact（Agent SDK 除外）是「高花費無產出」；中斷加糾正至少 3 次是「多次糾正或中斷」；花費至少 $0.5 且可疑浪費佔 30% 以上是「浪費比例高」。糾正是用關鍵字抓的，次數會灌水，判讀引用它時要打折。</p>
+    <div class="tr-card">
+      <h3 id="sess-title">所有 session</h3>
+      <p class="tr-pending" id="judge-pending" hidden>LLM 判讀還沒跑，判讀欄位先隱藏。</p>
+      <div class="tr-tools">
+        <input type="search" id="q-sessions" placeholder="搜尋標題、專案、標記" aria-label="搜尋 session">
+        <span class="cnt" id="cnt-sessions"></span>
+      </div>
+      <div class="tr-tablebox">
+        <table class="tr-t" id="t-sessions" data-source="sessions" data-row-key="session">
+          <thead><tr>
+            <th data-field="session"><button type="button">session</button></th>
+            <th data-field="title"><button type="button">標題</button></th>
+            <th data-field="host" class="sec"><button type="button">機器</button></th>
+            <th data-field="source" class="sec"><button type="button">入口</button></th>
+            <th data-field="day" class="sec"><button type="button">開始</button></th>
+            <th data-field="cost" class="n"><button type="button">花費</button></th>
+            <th data-field="waste_cost" class="n"><button type="button">可疑浪費</button></th>
+            <th data-field="calls" class="n sec"><button type="button">呼叫數</button></th>
+            <th data-field="edits" class="n"><button type="button">edits</button></th>
+            <th data-field="corrections" class="n sec"><button type="button">糾正</button></th>
+            <th data-field="flag"><button type="button">標記</button></th>
+            <th data-field="verdict" class="j"><button type="button">判讀</button></th>
+            <th data-field="reason" class="j"><button type="button">原因</button></th>
+            <th data-field="fix" class="j sec"><button type="button">下次怎麼做</button></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="tr-sec" id="method">
+    <h2>方法與限制</h2>
+    <ul class="tr-method">
+      <li><b>花費是 API 等價，對過兩次帳。</b>每個 API 呼叫的 usage 乘上官方單價。跟 Claude Code 自己記錄的 totalCostUSD 比，<span data-source="meta" data-row="0" data-field="check_n">—</span> 個 session 的中位數比值是 <span data-source="meta" data-row="0" data-field="check_median">—</span>；跟 ccusage 比，<span data-source="meta" data-row="0" data-field="xc_host">—</span> 在 <span data-source="meta" data-row="0" data-field="xc_days">—</span> 個完整日（到 <span data-source="meta" data-row="0" data-field="xc_until">—</span>）是 <span data-source="meta" data-row="0" data-field="xc_ours">—</span> 對 <span data-source="meta" data-row="0" data-field="xc_ccusage">—</span>，比值 <span data-source="meta" data-row="0" data-field="xc_ratio">—</span>。Max 訂閱額度怎麼換算沒有公開，所以這不等於你用掉多少額度。</li>
+      <li><b>這裡只看浪費。</b>每日趨勢與按 model、session 的成本總表用 ccusage（<code>npx ccusage@20.0.42 daily</code>）；當下 session 的固定開銷（system prompt、tool 定義、skill 清單）用 Claude Code 的 <code>/context</code>，它是精確值。</li>
+      <li><b>資料範圍。</b>從 <span data-source="meta" data-row="0" data-field="start_day">—</span> 起，涵蓋 <span data-source="meta" data-row="0" data-field="chains">—</span> 條 chain、<span data-source="meta" data-row="0" data-field="calls">—</span> 次 API 呼叫；三台的 transcript 保留天數已改成 365 天。claude.ai 網頁對話與雲端 session 不在內。</li>
+      <li><b>tokens 怎麼分給每筆內容。</b>兩次呼叫之間 context 增加的 tokens（扣掉上一次的 output），依字元數比例分給這段時間插入的 tool 結果、使用者訊息與 attachment。</li>
+      <li><b>cache 重建的判定。</b>一次呼叫的 cache write 至少 20,000 tokens 且超過該次 context 的一半；金額是重寫的 tokens 乘上（寫入單價 − 讀取單價）。</li>
+      <li><b>判讀。</b>被標記的 session 中花費最高的 15 個，交給 Claude Opus 5.5 讀摘要後判斷值不值得；它只看到節錄，不是整段對話。</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+(function () {
+  const HOST_LABEL = {air: 'MacBook Air', pro: 'MacBook Pro', lab: '實驗室 NAS'};
+  const usd = v => (Math.abs(+v) >= 100 ? d3.format('$,.0f') : d3.format('$,.2f'))(+v);
+  const pct = v => d3.format('.0%')(+v);
+  const num = v => d3.format(',')(+v);
+  const compact = v => new Intl.NumberFormat('en', {notation: 'compact', maximumFractionDigits: 1}).format(+v);
+  const FMT = {cost: usd, waste: usd, rebuild: usd, big: usd, share: pct, sessions: num, rebuild_n: num, big_n: num,
+               days: num, check_n: num, check_median: v => d3.format('.3f')(+v), calls: num, chains: num,
+               xc_host: v => HOST_LABEL[v] || v, xc_days: num, xc_ours: usd, xc_ccusage: usd,
+               xc_ratio: v => d3.format('.3f')(+v)};
+  const WHY = {
+    'cache 重建|cache 已失效（找不到上一則）': '：上一則的 cache 已經找不到，多半是閒置超過 TTL 再回到同一個長 session，整段 context 重新寫進 cache。',
+    'cache 重建|閒置超過 1 小時（推測）': '：離開超過一小時再回到同一個長 session，整段 context 重新寫進 cache。',
+    '大型 tool 輸出|': '：一次讀進大量內容，之後每個呼叫都再付一次。'
+  };
+
+  dash.calc('totals', {
+    title: '總花費與可疑浪費',
+    description: '加總每個 session 的花費，以及每類可疑浪費的次數與花費。',
+    inputs: ['sessions', 'waste_kinds'],
+    fn: (sessions, waste_kinds) => {
+      const sum = (rows, f) => rows.reduce((a, r) => a + Number(r[f] || 0), 0);
+      const rebuild = waste_kinds.filter(r => r.kind === 'cache 重建');
+      const big = waste_kinds.filter(r => r.kind === '大型 tool 輸出');
+      const cost = sum(sessions, 'cost');
+      const waste = sum(waste_kinds, 'cost');
+      return [{cost, waste, share: cost ? waste / cost : 0, rebuild: sum(rebuild, 'cost'), rebuild_n: sum(rebuild, 'count'),
+               big: sum(big, 'cost'), big_n: sum(big, 'count'), sessions: sessions.length}];
+    }
+  });
+
+  // ---- helpers ------------------------------------------------------------------------
+  function clear(box) { box.querySelectorAll('svg, .tr-fail').forEach(n => n.remove()); }
+  function fail(box) {
+    const d = document.createElement('div'); d.className = 'tr-fail';
+    d.appendChild(document.createElement('i')); d.appendChild(document.createTextNode('Failed to load'));
+    box.appendChild(d);
+  }
+  function tipFor(box) {
+    let t = box.querySelector('.tr-tip');
+    if (!t) { t = document.createElement('div'); t.className = 'tr-tip'; t.hidden = true; box.appendChild(t); }
+    return {
+      show(evt, head, lines) {
+        t.textContent = '';
+        const h = document.createElement('div'); h.className = 'tr-tip-h'; h.textContent = head; t.appendChild(h);
+        for (const [name, val] of lines) {
+          const row = document.createElement('div'); row.className = 'tr-tip-r';
+          const n = document.createElement('span'); n.textContent = name; row.appendChild(n);
+          const v = document.createElement('b'); v.textContent = val; row.appendChild(v);
+          t.appendChild(row);
+        }
+        t.hidden = false;
+        const [x, y] = d3.pointer(evt, box);
+        t.style.left = Math.max(0, Math.min(x + 12, box.clientWidth - t.offsetWidth)) + 'px';
+        t.style.top = Math.max(0, y - t.offsetHeight - 10) + 'px';
+      },
+      hide() { t.hidden = true; }
+    };
+  }
+  function fit(probe, text, max) {
+    probe.text(text);
+    let w = probe.node().getComputedTextLength();
+    if (w <= max) return {t: text, w};
+    let s = text;
+    while (s.length > 1 && w > max) { s = s.slice(0, -1); probe.text(s + '…'); w = probe.node().getComputedTextLength(); }
+    return {t: s + '…', w};
+  }
+
+  // horizontal bars from one left edge: o = {label, value, fmt, tip}
+  function hbar(box, rows, o) {
+    clear(box);
+    const W = Math.max(280, box.clientWidth), rowH = 30, H = rows.length * rowH + 4;
+    const svg = d3.select(box).append('svg').attr('class', 'tr-svg').attr('width', '100%')
+      .attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+    const probe = svg.append('text');
+    const labels = rows.map(r => fit(probe, o.label(r), Math.min(W * 0.48, 280)));
+    const lw = d3.max(labels, l => l.w) || 0;
+    probe.text(o.fmt(d3.max(rows, o.value) || 0));
+    const vw = probe.node().getComputedTextLength() + 10;
+    probe.remove();
+    const x0 = lw + 10;
+    const x = d3.scaleLinear([0, d3.max(rows, o.value) || 1], [0, Math.max(20, W - x0 - vw)]);
+    const tip = tipFor(box);
+    const g = svg.selectAll('g.r').data(rows).join('g').attr('class', 'r')
+      .attr('transform', (r, i) => `translate(0,${i * rowH + 2})`);
+    g.append('text').attr('x', lw).attr('y', rowH / 2).attr('dy', '0.35em').attr('text-anchor', 'end').text((r, i) => labels[i].t);
+    g.append('rect').attr('x', x0).attr('y', 7).attr('height', rowH - 14).attr('rx', 4)
+      .attr('width', r => Math.max(2, x(o.value(r)))).attr('fill', dash.colors[0]);
+    g.append('text').attr('class', 'val').attr('x', r => x0 + Math.max(2, x(o.value(r))) + 6).attr('y', rowH / 2)
+      .attr('dy', '0.35em').text(r => o.fmt(o.value(r)));
+    g.append('rect').attr('width', W).attr('height', rowH).attr('fill', 'transparent')
+      .on('mousemove', (evt, r) => tip.show(evt, o.label(r), o.tip(r))).on('mouseleave', () => tip.hide());
+  }
+
+  function chart(id, source, draw) {
+    const box = document.getElementById(id);
+    const d = dash.data(source);
+    if (d.status === 'ok') { box.classList.remove('dash-skeleton'); draw(box, d.data); return; }
+    clear(box);
+    if (d.status === 'loading') box.classList.add('dash-skeleton');
+    else { box.classList.remove('dash-skeleton'); fail(box); }
+  }
+
+  // ---- tables -------------------------------------------------------------------------
+  const TABLES = {
+    't-sessions': {source: 'sessions', q: 'q-sessions', cnt: 'cnt-sessions', sort: 'cost', cols: [
+      {f: 'session', cls: 'mono'}, {f: 'title', cls: 'wide'}, {f: 'host', cls: 'sec', fmt: v => HOST_LABEL[v] || v},
+      {f: 'source', cls: 'sec'}, {f: 'day', cls: 'sec'}, {f: 'cost', num: 1, fmt: usd}, {f: 'waste_cost', num: 1, fmt: usd},
+      {f: 'calls', num: 1, cls: 'sec', fmt: num}, {f: 'edits', num: 1, fmt: num}, {f: 'corrections', num: 1, cls: 'sec', fmt: num},
+      {f: 'flag', pill: () => 'bad'},
+      {f: 'verdict', cls: 'j', pill: v => (v === '值得' ? 'ok' : v === '部分值得' ? 'warn' : 'bad')},
+      {f: 'reason', cls: 'j wide'}, {f: 'fix', cls: 'j sec wide'}]},
+    't-waste': {source: 'waste', q: 'q-waste', cnt: 'cnt-waste', sort: 'cost', cols: [
+      {f: 'rank', num: 1}, {f: 'kind'}, {f: 'tool', cls: 'sec'}, {f: 'detail', cls: 'wide mono'}, {f: 'project', cls: 'sec'},
+      {f: 'where', cls: 'sec'}, {f: 'tokens', num: 1, fmt: compact}, {f: 'carried', num: 1, cls: 'sec', fmt: num},
+      {f: 'cost', num: 1, fmt: usd}]}
+  };
+  const state = {};
+
+  function renderTable(id) {
+    const spec = TABLES[id], tbl = document.getElementById(id), tb = tbl.tBodies[0];
+    const d = dash.data(spec.source);
+    const st = state[id];
+    tb.textContent = '';
+    if (d.status !== 'ok') return;
+    const rows = d.data;
+    if (id === 't-sessions') {
+      const judged = rows.some(r => r.verdict);
+      tbl.classList.toggle('hide-judge', !judged);
+      document.getElementById('judge-pending').hidden = judged;
+    }
+    const q = st.q.trim().toLowerCase();
+    const col = spec.cols.find(c => c.f === st.key);
+    const list = rows.filter(r => !q || spec.cols.some(c => String(r[c.f] == null ? '' : r[c.f]).toLowerCase().includes(q)))
+      .sort((a, b) => (col && col.num ? Number(a[st.key] || 0) - Number(b[st.key] || 0)
+        : String(a[st.key] == null ? '' : a[st.key]).localeCompare(String(b[st.key] == null ? '' : b[st.key]))) * st.dir);
+    const frag = document.createDocumentFragment();
+    for (const r of list) {
+      const tr = document.createElement('tr');
+      for (const c of spec.cols) {
+        const td = document.createElement('td');
+        if (c.num) td.classList.add('n');
+        if (c.cls) c.cls.split(' ').forEach(k => td.classList.add(k));
+        const v = r[c.f];
+        if (c.pill) {
+          String(v || '').split('、').filter(Boolean).forEach(p => {
+            const s = document.createElement('span'); s.className = 'tr-pill ' + c.pill(p); s.textContent = p; td.appendChild(s);
+          });
+        } else {
+          td.textContent = c.fmt ? c.fmt(v, r) : (v == null ? '' : String(v));
+        }
+        tr.appendChild(td);
+      }
+      frag.appendChild(tr);
+    }
+    tb.appendChild(frag);
+    for (const th of tbl.tHead.rows[0].cells) {
+      th.setAttribute('aria-sort', th.dataset.field === st.key ? (st.dir < 0 ? 'descending' : 'ascending') : 'none');
+    }
+    document.getElementById(spec.cnt).textContent = list.length === rows.length ? `${num(rows.length)} 筆` : `${num(list.length)} / ${num(rows.length)} 筆`;
+  }
+
+  Object.keys(TABLES).forEach(id => {
+    const spec = TABLES[id], tbl = document.getElementById(id);
+    state[id] = {key: spec.sort, dir: -1, q: ''};
+    for (const th of tbl.tHead.rows[0].cells) {
+      th.querySelector('button').addEventListener('click', () => {
+        const st = state[id], f = th.dataset.field;
+        if (st.key === f) st.dir = -st.dir;
+        else { st.key = f; st.dir = spec.cols.find(c => c.f === f && c.num) ? -1 : 1; }
+        renderTable(id);
+      });
+    }
+    document.getElementById(spec.q).addEventListener('input', e => { state[id].q = e.target.value; renderTable(id); });
+  });
+
+  // ---- marks outside tables and charts ------------------------------------------------
+  function fillMarks() {
+    document.querySelectorAll('.tr [data-source][data-field]').forEach(el => {
+      if (el.closest('table') || el.classList.contains('tr-chart')) return;
+      const d = dash.data(el.dataset.source);
+      if (d.status === 'loading') { el.classList.add('dash-skeleton'); el.textContent = '—'; return; }
+      el.classList.remove('dash-skeleton');
+      const rows = d.status === 'ok' && Array.isArray(d.data) ? d.data : [];
+      const r = rows[el.dataset.row != null ? Number(el.dataset.row) : 0];
+      const v = r ? r[el.dataset.field] : null;
+      el.textContent = v == null || v === '' ? '—' : (FMT[el.dataset.field] || String)(v);
+    });
+    const k = dash.data('waste_kinds');
+    const top = k.status === 'ok' && k.data.length ? k.data[0] : null;
+    document.getElementById('take-detail-wrap').hidden = !(top && top.detail);
+    document.getElementById('take-why').textContent = top ? (WHY[top.kind + '|' + (top.detail || '')] || '。') : '';
+  }
+
+  const kindLabel = r => r.kind + (r.detail ? '：' + r.detail : '');
+  dash.onData(() => {
+    fillMarks();
+    chart('ch-kinds', 'waste_kinds', (box, rows) => hbar(box, rows, {label: kindLabel, value: r => Number(r.cost), fmt: usd,
+      tip: r => [['次數', num(r.count)], ['tokens', compact(r.tokens)], ['花費', usd(r.cost)]]}));
+    Object.keys(TABLES).forEach(renderTable);
+  });
+})();
+</script>
