@@ -28,3 +28,4 @@
 - Opus 5.5 的 cache read 是 input 的 1/20（$0.20 vs $4），Fable 5.1 是 1/40；不是常見的 1/10。
 - transcript 預設只留 30 天；第一次 run 最早只到 2026-09-20。
 - 2026-10-25：corrections 與 interrupts 原本連 subagent 的 user 訊息一起算，但那是主線寫給 subagent 的 prompt，不是使用者打的字。602 次「糾正」裡 582 次來自 subagent，judge 的 reason 還引用了灌水數字。改成只算主線，errors、retries 照舊算全部。corrections 只是 regex 命中數，不等於人工確認的糾正。
+- 2026-10-25：judge 單次結果不能當定論，而且對 corrections 很敏感。同一份輸入修正前後各跑 5 次：15 個 session 有 11 個 10 次都一樣；最貴的 session 修正前 5 次全判「不值得」，修正後 5 次全判「部分值得」；落在兩種 verdict 邊界的 session 會隨機跳動。要引用 judge 結論就多跑幾次看多數票。
